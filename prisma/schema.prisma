@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Skill {
+  id                String  @id @default(uuid())
+  name              String  @unique
+  category          String
+  demand_score      Float
+  salary_average_lpa Float
+  growth_rate       Float
+  future_growth_rate Float @default(0.0)
+  saturation_level  Float
+  skill_price_index Float
+  complexity_hours  Float  @default(150.0)
+
+  trends            SkillTrend[]
+}
+
+model SkillTrend {
+  id                String @id @default(uuid())
+  skill_id          String
+  skill             Skill  @relation(fields: [skill_id], references: [id])
+  year              Int
+  demand_percentage Float
+  salary_average_lpa Float
+}
+
+model JobRole {
+  id                  String   @id @default(uuid())
+  title               String   @unique
+  required_skills     String[]
+  average_salary_lpa  Float
+  automation_risk     Float
+}
+
+model User {
+  id          String   @id @default(uuid())
+  name        String
+  skills      String[]
+  target_role String
+}
+
+// --- NEW COLLEGE PLACEMENT MODELS ---
+
+model College {
+  id         String      @id @default(uuid())
+  name       String      @unique
+  city       String
+  state      String
+  placements Placement[]
+}
+
+model Company {
+  id         String      @id @default(uuid())
+  name       String      @unique
+  category   String      // Product, Service, Bank, Startup, Others
+  workload   String      // Light, Moderate, Heavy
+  frequency  String      // Regular, Occasional, Rare
+  placements Placement[]
+}
+
+model Placement {
+  id          String   @id @default(uuid())
+  college_id  String
+  company_id  String
+  avg_package Float
+  top_skills  String[]
+  
+  college     College  @relation(fields: [college_id], references: [id])
+  company     Company  @relation(fields: [company_id], references: [id])
+
+  // Ensure a company is only mapped once per college
+  @@unique([college_id, company_id])
+}
